@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Test</title>
+<style>
+body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
+input,button{width:100%;padding:8px;margin:5px;}
+.card{background:#111827;padding:10px;margin:10px 0;border-radius:10px;}
+button{background:#2563eb;color:white;border:none;border-radius:5px;}
+</style>
+</head>
+<body>
+
+<h1>Admin Panel Test</h1>
+
+<div id="loginForm">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="panel" style="display:none;">
+  <h2>Add Product</h2>
+  <input id="name" placeholder="Name">
+  <input id="desc" placeholder="Description">
+  <input id="price" type="number" placeholder="Price">
+  <input id="stock" type="number" placeholder="Stock">
+  <input id="image" placeholder="Image URL">
+  <button onclick="addProduct()">Add</button>
+
+  <h2>Products</h2>
+  <div id="products"></div>
+</div>
+
+<script>
+let token;
+let products = [];
+
+async function login(){
+  const res = await fetch("/api/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ email: document.getElementById("email").value,
+                           password: document.getElementById("password").value })
+  });
+  const data = await res.json();
+  if(data.token){
+    token = data.token;
+    document.getElementById("loginForm").style.display="none";
+    document.getElementById("panel").style.display="block";
+    loadProducts();
+  } else {
+    alert("Login failed");
+  }
+}
+
+async function loadProducts(){
+  const res = await fetch("/api/get-products");
+  const data = await res.json();
+  products = data.products;
+  document.getElementById("products").innerHTML = products.map(p=>`
+    <div class="card">${p.name} | ${p.price} DZD | Stock: ${p.stock}</div>
+  `).join("");
+}
+
+async function addProduct(){
+  const newProduct = {
+    id: products.length ? Math.max(...products.map(p=>p.id))+1 : 1,
+    name: document.getElementById("name").value,
+    description: document.getElementById("desc").value,
+    price: Number(document.getElementById("price").value),
+    stock: Number(document.getElementById("stock").value),
+    image: document.getElementById("image").value
+  };
+  products.push(newProduct);
+  await fetch("/api/save-products", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ products })
+  });
+  loadProducts();
+}
+</script>
+
+</body>
+</html>
