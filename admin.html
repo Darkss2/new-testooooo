@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel Test</title>
+  <title>Admin Panel</title>
   <style>
     body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
     input, button{width:100%;padding:8px;margin:5px;}
@@ -11,15 +11,9 @@
 </head>
 <body>
 
-<h1>Admin Panel Test</h1>
+<h1>Admin Panel (No Login)</h1>
 
-<div id="loginForm">
-  <input type="text" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-</div>
-
-<div id="panel" style="display:none;">
+<div id="panel">
   <h2>Add Product</h2>
   <input id="name" placeholder="Name">
   <input id="desc" placeholder="Description">
@@ -33,37 +27,9 @@
 </div>
 
 <script>
-let token;
 let products = [];
 
-document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("addBtn").addEventListener("click", addProduct);
-
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  if (!email || !password) { alert("Enter email and password"); return; }
-
-  try {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email, password })
-    });
-
-    if (res.status !== 200) { alert("Login failed"); return; }
-
-    const data = await res.json();
-    token = data.token;
-
-    document.getElementById("loginForm").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    loadProducts();
-  } catch(err) {
-    alert("Error: " + err.message);
-  }
-}
 
 async function loadProducts() {
   try {
@@ -93,10 +59,7 @@ async function addProduct() {
   try {
     await fetch("/api/save-products", {
       method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization": "Bearer " + token
-      },
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ products })
     });
     loadProducts();
@@ -104,6 +67,8 @@ async function addProduct() {
     alert("Error saving product: " + err.message);
   }
 }
+
+loadProducts();
 </script>
 
 </body>
