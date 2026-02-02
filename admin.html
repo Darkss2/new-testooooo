@@ -27,48 +27,59 @@
 </div>
 
 <script>
-let products = [];
+let products = [
+  { id: 1, name: "Test Product", description: "Just testing", price: 100, stock: 10, image: "https://via.placeholder.com/150" }
+];
 
-document.getElementById("addBtn").addEventListener("click", addProduct);
+const productsContainer = document.getElementById("products");
 
-async function loadProducts() {
-  try {
-    const res = await fetch("/api/get-products");
-    const data = await res.json();
-    products = data.products;
-    document.getElementById("products").innerHTML = products.map(p=>`
-      <div class="card">${p.name} | ${p.price} DZD | Stock: ${p.stock}</div>
-    `).join("");
-  } catch(err) {
-    alert("Error loading products: " + err.message);
-  }
+function renderProducts() {
+  productsContainer.innerHTML = products.map(p=>`
+    <div class="card">
+      <img src="${p.image}" width="100"><br>
+      <b>${p.name}</b> - ${p.price} DZD<br>
+      Stock: ${p.stock}<br>
+      ${p.description}
+    </div>
+  `).join("");
 }
 
-async function addProduct() {
+// Initial render
+renderProducts();
+
+// Add product button
+document.getElementById("addBtn").addEventListener("click", () => {
+  const name = document.getElementById("name").value;
+  const desc = document.getElementById("desc").value;
+  const price = Number(document.getElementById("price").value);
+  const stock = Number(document.getElementById("stock").value);
+  const image = document.getElementById("image").value;
+
+  if (!name || !price || !stock) {
+    alert("Please enter Name, Price, and Stock");
+    return;
+  }
+
   const newProduct = {
-    id: products.length ? Math.max(...products.map(p=>p.id))+1 : 1,
-    name: document.getElementById("name").value,
-    description: document.getElementById("desc").value,
-    price: Number(document.getElementById("price").value),
-    stock: Number(document.getElementById("stock").value),
-    image: document.getElementById("image").value
+    id: products.length ? Math.max(...products.map(p=>p.id)) + 1 : 1,
+    name,
+    description: desc,
+    price,
+    stock,
+    image: image || "https://via.placeholder.com/150"
   };
 
   products.push(newProduct);
 
-  try {
-    await fetch("/api/save-products", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ products })
-    });
-    loadProducts();
-  } catch(err) {
-    alert("Error saving product: " + err.message);
-  }
-}
+  // Clear form
+  document.getElementById("name").value = "";
+  document.getElementById("desc").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("stock").value = "";
+  document.getElementById("image").value = "";
 
-loadProducts();
+  renderProducts();
+});
 </script>
 
 </body>
