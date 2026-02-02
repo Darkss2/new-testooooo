@@ -17,3 +17,4 @@ export default function handler(req, res) {
   const token = jwt.sign({ email }, SECRET, { expiresIn: "1h" });
   res.status(200).json({ token });
 }
+
