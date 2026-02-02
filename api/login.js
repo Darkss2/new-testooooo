@@ -1,19 +1,28 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "testsecret";
+export default async function handler(req, res) {
+  const SECRET = process.env.JWT_SECRET || "testsecret";
 
-export default function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
+  try {
+    if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
 
-  const { email, password } = req.body;
+    let body = req.body;
+    if (typeof body === "string") body = JSON.parse(body);
 
-  const allowedEmails = (process.env.ALLOWED_EMAILS || "").split(",");
-  const adminPassword = process.env.ADMIN_PASSWORD || "";
+    const { email, password } = body;
 
-  if (!allowedEmails.includes(email) || password !== adminPassword) {
-    return res.status(401).json({ error: "Unauthorized" });
+    const allowedEmails = (process.env.ALLOWED_EMAILS || "").split(",");
+    const adminPassword = process.env.ADMIN_PASSWORD || "";
+
+    if (!allowedEmails.includes(email) || password !== adminPassword) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const token = jwt.sign({ email }, SECRET, { expiresIn: "1h" });
+    res.status(200).json({ token });
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
-
-  const token = jwt.sign({ email }, SECRET, { expiresIn: "1h" });
-  res.status(200).json({ token });
 }
