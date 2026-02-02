@@ -1,13 +1,26 @@
 import jwt from "jsonwebtoken";
 
+const SECRET = process.env.JWT_SECRET || "testsecret";
+
 export default async function handler(req, res) {
-  const SECRET = process.env.JWT_SECRET || "testsecret";
-
   try {
-    if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Use POST" });
+    }
 
+    // Ensure req.body is parsed
     let body = req.body;
-    if (typeof body === "string") body = JSON.parse(body);
+
+    // If body is undefined (Vercel sometimes passes as undefined)
+    if (!body) {
+      let raw = "";
+      await new Promise((resolve, reject) => {
+        req.on("data", chunk => raw += chunk);
+        req.on("end", () => resolve());
+        req.on("error", err => reject(err));
+      });
+      body = raw ? JSON.parse(raw) : {};
+    }
 
     const { email, password } = body;
 
@@ -19,10 +32,10 @@ export default async function handler(req, res) {
     }
 
     const token = jwt.sign({ email }, SECRET, { expiresIn: "1h" });
-    res.status(200).json({ token });
+    return res.status(200).json({ token });
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 }
